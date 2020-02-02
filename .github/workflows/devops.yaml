@@ -56,6 +56,7 @@ jobs:
       - name: Debug
         run: |
           echo "GITHUB_REF=$GITHUB_REF"
+          echo "GIT_DESCRIBE_TAG=$GIT_DESCRIBE_TAG"
           pwd
           ls -la
           cat /etc/centos-release

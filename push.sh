@@ -4,7 +4,7 @@ git add -A
 git commit -m "test" --author="LeonardoBaroncelli <leonardo.baroncelli@inaf.it>"
 
 
-tag="v1.0.1"
+tag="1.0.1"
 
 
 git tag -d $tag
