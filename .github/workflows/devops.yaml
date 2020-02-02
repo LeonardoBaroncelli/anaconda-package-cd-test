@@ -1,0 +1,74 @@
+name: Continous delivery on Anaconda Cloud (build in docker container)
+on:
+
+  push:
+
+    tags:
+      - v*
+
+jobs:
+
+  build_and_publish:
+
+    runs-on: ubuntu-latest
+
+    container: centos:7.7.1908
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Installing dependencies
+        run: |
+          yum -y install epel-release rsync unzip mailx bzip2
+          yum -y install git make gcc gcc-c++ binutils libX11-devel libXpm-devel libXft-devel libXext-devel
+          yum -y install curl less vim wget bc which
+          yum -y install libXcomposite libXcursor libXi libXtst libXrandr alsa-lib mesa-libEGL libXdamage mesa-libGL libXScrnSaver
+
+      - name: Installing Anaconda
+        run: |
+          echo "Install anaconda 5.3.0 x86_64"
+          wget -q https://repo.anaconda.com/archive/Anaconda3-5.3.0-Linux-x86_64.sh
+          echo "cfbf5fe70dd1b797ec677e63c61f8efc92dad930fd1c94d60390bb07fdc09959  Anaconda3-5.3.0-Linux-x86_64.sh" > anaconda_hash_sha256
+          sha256sum -c anaconda_hash_sha256
+          bash Anaconda3-5.3.0-Linux-x86_64.sh -b -p /opt/anaconda3
+          ln -s /opt/anaconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
+
+      - name: Anaconda info
+        run: |
+          which python
+          /opt/anaconda3/bin/conda --version
+
+      - name: Installing conda-build
+        run: |
+          /opt/anaconda3/bin/conda install -y conda-build
+          /opt/anaconda3/bin/conda update -y conda-build
+
+      - name: Download anaconda-package-cd-test-recipe
+        run: |
+          git clone https://github.com/LeonardoBaroncelli/anaconda-package-cd-test-recipe.git
+          cp anaconda-package-cd-test-recipe/remote/build.sh ./
+          cp anaconda-package-cd-test-recipe/remote/meta.yaml ./
+
+
+      - name: Debug
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
+          pwd
+          ls -la
+          cat /etc/centos-release
+          which python
+          python --version
+          ls /opt/anaconda3/bin
+
+      - name: Build and Publish on Anaconda cloud
+        env:
+          USERNAME: ${{ secrets.ANACONDA_USERNAME }}
+          PASSWORD: ${{ secrets.ANACONDA_PASSWORD }}
+        run: |
+          /opt/anaconda3/bin/conda config --add channels conda-forge
+          /opt/anaconda3/bin/conda config --set anaconda_upload yes
+          /opt/anaconda3/bin/anaconda login --username $USERNAME --password $PASSWORD
+          /opt/anaconda3/bin/conda-build .
