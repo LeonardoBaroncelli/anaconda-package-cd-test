@@ -4,13 +4,13 @@ git add -A
 git commit -m "test" --author="LeonardoBaroncelli <leonardo.baroncelli@inaf.it>"
 
 
-#tag=$(git describe --tags)
+tag="v1.0.1"
 
 
-git tag -d v1.0.0
+git tag -d $tag
 
-git push originlb --delete v1.0.0
+git push originlb --delete $tag
 
-git tag v1.0.0 $(git log --format="%H" -n 1)
+git tag $tag $(git log --format="%H" -n 1)
  
-git push originlb v1.0.0
+git push originlb $tag
